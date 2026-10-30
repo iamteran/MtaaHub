@@ -1,0 +1,25 @@
+﻿const { chromium } = require("playwright-core");
+const PASSWORD = process.env.E2E_PASSWORD;
+(async () => {
+  const b = await chromium.launch({ channel: "msedge", headless: true });
+  const p = await b.newPage({ viewport: { width: 1440, height: 1000 } });
+  p.on("console", (m) => m.type() === "error" && console.log("CONSOLE", m.text()));
+  p.on("response", (r) => { if (r.url().includes("nyumba") && r.status() >= 400) console.log("HTTP", r.status(), r.url()); });
+  await p.goto("http://127.0.0.1:3100/auth/signin", { waitUntil: "networkidle" });
+  await p.fill("#email", "brian@mtaahub.co.ke");
+  await p.fill("#password", PASSWORD);
+  await p.click('button[type="submit"]');
+  await p.waitForURL(/dashboard/, { timeout: 30000 });
+  await p.goto("http://127.0.0.1:3100/nyumba/list", { waitUntil: "networkidle" });
+  await p.waitForTimeout(1200);
+  await p.fill("#title", "Debug listing Kileleshwa");
+  await p.fill("#rent", "32000");
+  await p.fill("#contactPhone", "0712345999");
+  await p.fill("#description", "Quiet one bedroom with a balcony, borehole water and secure parking.");
+  await p.click('button[type="submit"]');
+  await p.waitForTimeout(5000);
+  console.log("URL:", p.url());
+  const alerts = await p.locator('[role="alert"]').allInnerTexts();
+  console.log("ALERTS:", JSON.stringify(alerts));
+  await b.close();
+})();

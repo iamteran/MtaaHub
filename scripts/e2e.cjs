@@ -1,6 +1,7 @@
 const { chromium } = require("playwright-core");
 
 const BASE = "http://127.0.0.1:3100";
+const PASSWORD = process.env.E2E_PASSWORD || "Password123!";
 const results = [];
 
 function log(name, ok, extra = "") {
@@ -18,7 +19,7 @@ function log(name, ok, extra = "") {
   // 1. credentials sign in
   await page.goto(`${BASE}/auth/signin`, { waitUntil: "networkidle" });
   await page.fill("#email", "brian@mtaahub.co.ke");
-  await page.fill("#password", "Password123!");
+  await page.fill("#password", PASSWORD);
   await Promise.all([page.waitForURL(/\/dashboard/, { timeout: 30000 }).catch(() => null), page.click('button[type="submit"]')]);
   log("credentials sign-in redirects to dashboard", page.url().includes("/dashboard"), page.url());
 
@@ -34,7 +35,8 @@ function log(name, ok, extra = "") {
   await page.fill("#contactPhone", "0712345999");
   await page.fill("#description", "Quiet one bedroom with a balcony, borehole water and secure parking. Available immediately.");
   await page.click('button[type="submit"]');
-  await page.waitForTimeout(3500);
+  await page.waitForURL(/\/nyumba\/(?!list)[a-z0-9]{20,}/, { timeout: 30000 }).catch(() => null);
+  await page.waitForLoadState("networkidle").catch(() => null);
   const created = /\/nyumba\/(?!list)[a-z0-9]+/i.test(page.url());
   log("create listing redirects to detail page", created, page.url());
 

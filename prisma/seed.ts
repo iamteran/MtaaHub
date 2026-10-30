@@ -46,7 +46,9 @@ const SETTINGS = [
 async function main() {
   console.log("🌱 Seeding MtaaHub…");
 
-  const passwordHash = await bcrypt.hash("Password123!", 10);
+  // Deployments should not ship the repo-known demo password:
+  const seedPassword = process.env.SEED_ADMIN_PASSWORD ?? "Password123!";
+  const passwordHash = await bcrypt.hash(seedPassword, 10);
 
   const admin = await prisma.user.upsert({
     where: { email: "admin@mtaahub.co.ke" },
@@ -380,7 +382,10 @@ async function main() {
   }
 
   console.log("🎉 Seed complete");
-  console.log("   Admin login: admin@mtaahub.co.ke / Password123!");
+  console.log(`   Admin login: admin@mtaahub.co.ke`);
+  console.log(seedPassword === "Password123!"
+    ? "   Password: the default demo password (set SEED_ADMIN_PASSWORD to override)"
+    : "   Password: the value of SEED_ADMIN_PASSWORD");
 }
 
 main()
