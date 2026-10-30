@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { AlertCircle, CheckCircle2, Eye, EyeOff, Loader2, Lock, Mail, User } from "lucide-react";
 import { registerUser } from "@/app/actions";
+import { Logo } from "@/components/brand/logo";
 
 type Props = {
   callbackUrl: string;
@@ -50,19 +51,8 @@ export function SignInForm({ callbackUrl, error, registered, mode, googleEnabled
     <div className="flex min-h-screen items-center justify-center bg-ink-50 px-4 py-12">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <span className="flex h-11 w-11 items-center justify-center rounded-[26%] bg-primary-700">
-              <svg viewBox="0 0 48 48" className="h-6 w-6" fill="none" aria-hidden="true">
-                <path
-                  d="M24 8.5c-4.7 0-8.5 3.7-8.5 8.2 0 6 7.6 14.4 8.1 15a.6.6 0 0 0 .9 0c.5-.6 8.1-9 8.1-15 0-4.5-3.8-8.2-8.6-8.2Z"
-                  fill="#fff"
-                />
-                <path d="M24 18.6l-4.6 3.6v5.2h3v-3.4h3.2v3.4h3v-5.2L24 18.6Z" fill="#0B6B45" />
-              </svg>
-            </span>
-            <span className="font-display text-xl font-extrabold text-ink-900">
-              Mtaa<span className="text-primary-700">Hub</span>
-            </span>
+          <Link href="/" className="inline-flex items-center">
+            <Logo size={44} />
           </Link>
           <h1 className="mt-5 font-display text-2xl font-extrabold text-ink-900">
             {isSignup ? "Create your free account" : "Welcome back"}

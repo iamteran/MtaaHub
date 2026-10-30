@@ -9,6 +9,7 @@ import { Logo } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
 
 const NAV = [
+  { href: "/", label: "Home" },
   { href: "/jobs", label: "Jobs" },
   { href: "/nyumba", label: "NyumbaHub" },
   { href: "/services", label: "Services" },
@@ -28,7 +29,8 @@ export function Header() {
     setMenuOpen(false);
   }, [pathname]);
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+  const isActive = (href: string) =>
+    href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
   const user = session?.user;
   const initial = (user?.displayName || user?.name || user?.email || "U").charAt(0).toUpperCase();
 
@@ -40,13 +42,13 @@ export function Header() {
             <Logo size={42} />
           </Link>
 
-          <nav className="hidden items-center gap-7 lg:flex" aria-label="Primary">
+          <nav className="hidden items-center gap-7 xl:flex" aria-label="Primary">
             {NAV.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "relative py-2 text-[15px] font-medium transition-colors",
+                  "relative whitespace-nowrap py-2 text-[15px] font-medium transition-colors",
                   isActive(item.href) ? "text-primary-800" : "text-ink-600 hover:text-primary-700"
                 )}
               >
@@ -140,7 +142,7 @@ export function Header() {
 
             <button
               type="button"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full text-ink-700 hover:bg-ink-50 lg:hidden"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full text-ink-700 hover:bg-ink-50 xl:hidden"
               onClick={() => setOpen((v) => !v)}
               aria-label={open ? "Close menu" : "Open menu"}
               aria-expanded={open}
@@ -152,7 +154,7 @@ export function Header() {
       </div>
 
       {open && (
-        <div className="border-t border-ink-100 bg-white lg:hidden">
+        <div className="border-t border-ink-100 bg-white xl:hidden">
           <nav className="container-main flex flex-col py-3" aria-label="Mobile">
             {NAV.map((item) => (
               <Link
