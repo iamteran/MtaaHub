@@ -41,3 +41,9 @@ desktop.ini
 
 # local secrets
 .admin-password.tmp
+.prod-secret.tmp
+
+.vercel
+.env*
+
+.vercel

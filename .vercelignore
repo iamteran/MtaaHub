@@ -1,0 +1,11 @@
+.next
+shots
+npm-cache
+node_modules
+prisma/dev.db
+prisma/dev.db-journal
+.admin-password.tmp
+.prod-secret.tmp
+.env
+.env.local
+*.log

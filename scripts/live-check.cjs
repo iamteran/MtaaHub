@@ -1,0 +1,26 @@
+﻿const { chromium } = require("playwright-core");
+const BASE = "https://mtaahub-ict-d9c2.vercel.app";
+const PASSWORD = process.env.ADMIN_PASSWORD;
+(async () => {
+  const b = await chromium.launch({ channel: "msedge", headless: true });
+  const p = await b.newPage({ viewport: { width: 1440, height: 1000 } });
+  const errors = [];
+  p.on("pageerror", (e) => errors.push(e.message));
+  await p.goto(BASE + "/auth/signin", { waitUntil: "networkidle", timeout: 60000 });
+  await p.waitForTimeout(1200);
+  await p.fill("#email", "admin@mtaahub.co.ke");
+  await p.fill("#password", PASSWORD);
+  await p.click('button[type="submit"]');
+  await p.waitForURL(/dashboard/, { timeout: 45000 }).catch(() => null);
+  console.log("after sign-in:", p.url());
+  await p.goto(BASE + "/admin", { waitUntil: "networkidle", timeout: 60000 });
+  await p.waitForTimeout(1500);
+  console.log("admin url:", p.url());
+  console.log("heading:", await p.locator("h1").first().innerText().catch(() => "none"));
+  await p.screenshot({ path: "shots/live-admin.png", fullPage: false });
+  await p.goto(BASE + "/", { waitUntil: "networkidle", timeout: 60000 });
+  await p.waitForTimeout(1200);
+  await p.screenshot({ path: "shots/live-home.png", fullPage: false });
+  console.log("errors:", errors.length ? errors.join(" | ") : "none");
+  await b.close();
+})();
