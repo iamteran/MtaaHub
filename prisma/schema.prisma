@@ -1,0 +1,520 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  emailVerified   DateTime?
+  name            String?
+  displayName     String?
+  image           String?
+  role String  @default("USER")
+  googleId        String?   @unique
+  passwordHash    String?
+  phone           String?
+  county          String?
+  town            String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  lastLoginAt     DateTime?
+
+  listings            Listing[]
+  jobPosts            JobPost[]
+  jobApplications     JobApplication[]
+  services            ServiceProvider[]
+  prices              Price[]
+  priceSubmissions    PriceSubmission[] @relation("PriceSubmissionSubmittedBy")
+  verifiedPriceSubmissions PriceSubmission[] @relation("PriceSubmissionVerifiedBy")
+  reports             Report[]
+  verifications       VerificationCheck[]
+  favourites          Favourite[]
+  biasharaRecords     BiasharaRecord[]
+  businessSettings    BusinessSettings?
+  properties          Property[]
+  propertyVerifications Verification[] @relation("VerificationChecker")
+  notifications       Notification[]
+  auditLogs           AuditLog[]
+  sessions            Session[]
+  accounts            Account[]
+
+  @@index([email])
+  @@index([googleId])
+  @@index([role])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Location {
+  id      String   @id @default(cuid())
+  county  String
+  town    String?
+  estate  String?
+  lat     Float?
+  lng     Float?
+
+  listings       Listing[]
+  jobPosts       JobPost[]
+  services       ServiceProvider[]
+  prices         Price[]
+
+  @@unique([county, town, estate])
+  @@index([county])
+  @@index([county, town])
+}
+
+model Listing {
+  id              String        @id @default(cuid())
+  userId          String
+  locationId      String?
+  propertyId      String?
+  title           String
+  description     String
+  propertyType    String
+  bedrooms        Int?
+  bathrooms       Int?
+  rent            Int
+  deposit         Int?
+  amenities String
+  images String
+  status String @default("DRAFT")
+  availableFrom   DateTime?
+  availableUntil  DateTime?
+  contactPhone    String
+  contactWhatsApp Boolean       @default(true)
+  contactEmail    Boolean       @default(false)
+  viewCount       Int           @default(0)
+  favouriteCount  Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  expiresAt       DateTime?
+  rentedAt        DateTime?
+  deletedAt       DateTime?
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  location      Location?    @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  property      Property?    @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  verifications VerificationCheck[]
+  favourites    Favourite[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([propertyType])
+  @@index([rent])
+  @@index([locationId])
+  @@index([propertyId])
+  @@index([createdAt])
+  @@index([availableFrom])
+}
+
+model JobPost {
+  id                String      @id @default(cuid())
+  postedById        String
+  title             String
+  companyName       String?
+  description       String
+  jobType String
+  category          String
+  county            String
+  town              String?
+  estate            String?
+  isRemote          Boolean     @default(false)
+  salaryMin         Int?
+  salaryMax         Int?
+  salaryPeriod String? @default("MONTHLY")
+  benefits          String?
+  requirements      String?
+  applicationUrl    String?
+  applicationEmail  String?
+  applicationPhone  String?
+  deadline          DateTime?
+  status String @default("DRAFT")
+  viewCount         Int         @default(0)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  deletedAt         DateTime?
+
+  postedBy      User             @relation(fields: [postedById], references: [id], onDelete: Cascade)
+  location      Location?        @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  locationId    String?
+  applications  JobApplication[]
+
+  @@index([postedById])
+  @@index([status])
+  @@index([jobType])
+  @@index([category])
+  @@index([county])
+  @@index([town])
+  @@index([locationId])
+  @@index([createdAt])
+  @@index([deadline])
+}
+
+model JobApplication {
+  id            String            @id @default(cuid())
+  jobPostId     String
+  applicantId   String
+  status String @default("APPLIED")
+  coverLetter   String?
+  resumeUrl     String?
+  appliedAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  jobPost   JobPost  @relation(fields: [jobPostId], references: [id], onDelete: Cascade)
+  applicant User     @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+
+  @@unique([jobPostId, applicantId])
+  @@index([jobPostId])
+  @@index([applicantId])
+  @@index([status])
+  @@index([appliedAt])
+}
+
+model ServiceProvider {
+  id              String          @id @default(cuid())
+  userId          String
+  locationId      String?
+  name            String
+  category String
+  subcategory     String?
+  description     String
+  phone           String
+  whatsapp        Boolean         @default(true)
+  email           String?
+  areasServed String
+  pricing         String?
+  businessHours   String?
+  images String
+  verificationStatus String @default("PENDING")
+  rating          Float           @default(0)
+  reviewCount     Int             @default(0)
+  viewCount       Int             @default(0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  location      Location?           @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  verifications VerificationCheck[]
+  propertyVerifications Verification[]
+
+  @@index([userId])
+  @@index([category])
+  @@index([verificationStatus])
+  @@index([locationId])
+  @@index([rating])
+}
+
+model Price {
+  id          String        @id @default(cuid())
+  userId      String
+  locationId  String?
+  category String
+  itemName    String
+  unit String
+  price       Int
+  brand       String?
+  quantity    String?
+  shopName    String?
+  shopAddress String?
+  notes       String?
+  submittedAt DateTime      @default(now())
+  verifiedAt  DateTime?
+  verifiedBy  String?
+
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  location Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([category])
+  @@index([itemName])
+  @@index([locationId])
+  @@index([submittedAt])
+}
+
+model PriceSubmission {
+  id              String      @id @default(cuid())
+  submittedById   String
+  category        String
+  itemName        String
+  brand           String?
+  unit            String
+  price           Int
+  county          String
+  town            String?
+  estate          String?
+  source          String
+  sourceDetails   String?
+  notes           String?
+  status          String      @default("DRAFT")
+  isVerified      Boolean     @default(false)
+  verifiedAt      DateTime?
+  verifiedById    String?
+  submittedAt     DateTime    @default(now())
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  deletedAt       DateTime?
+
+  submittedBy   User @relation("PriceSubmissionSubmittedBy", fields: [submittedById], references: [id], onDelete: Cascade)
+  verifiedBy    User? @relation("PriceSubmissionVerifiedBy", fields: [verifiedById], references: [id], onDelete: SetNull)
+
+  @@index([submittedById])
+  @@index([category])
+  @@index([itemName])
+  @@index([county])
+  @@index([town])
+  @@index([status])
+  @@index([isVerified])
+  @@index([submittedAt])
+}
+
+model Property {
+  id              String      @id @default(cuid())
+  title           String
+  description     String
+  propertyType    String
+  county          String
+  town            String
+  estate          String?
+  latitude        Float?
+  longitude       Float?
+  address         String?
+  landmarks       String?
+  createdById     String
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  deletedAt       DateTime?
+
+  createdBy   User        @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  media       PropertyMedia[]
+  listings    Listing[]
+  verifications Verification[]
+
+  @@index([createdById])
+  @@index([county])
+  @@index([town])
+  @@index([propertyType])
+  @@index([createdAt])
+}
+
+model PropertyMedia {
+  id          String   @id @default(cuid())
+  propertyId  String
+  url         String
+  type        String   @default("image")
+  sortOrder   Int      @default(0)
+  isPrimary   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+}
+
+model Verification {
+  id          String      @id @default(cuid())
+  propertyId  String?
+  serviceId   String?
+  checkerId   String
+  type        String
+  status      String      @default("PENDING")
+  notes       String?
+  evidence    String      @default("[]")
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  property Property? @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  service ServiceProvider? @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  checker User @relation("VerificationChecker", fields: [checkerId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+  @@index([serviceId])
+  @@index([checkerId])
+  @@index([type])
+  @@index([status])
+}
+
+model Report {
+  id          String      @id @default(cuid())
+  reporterId  String?
+  type String
+  targetType  String
+  targetId    String
+  reason      String
+  evidence String    @default("[]")
+  status String @default("PENDING")
+  reviewedBy  String?
+  reviewedAt  DateTime?
+  resolution  String?
+  createdAt   DateTime    @default(now())
+
+  reporter User? @relation(fields: [reporterId], references: [id], onDelete: SetNull)
+
+  @@index([reporterId])
+  @@index([type])
+  @@index([targetType, targetId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model VerificationCheck {
+  id          String            @id @default(cuid())
+  listingId   String?
+  providerId  String?
+  checkerId   String
+  type String
+  status String @default("PENDING")
+  notes       String?
+  evidence String          @default("[]")
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  listing  Listing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  provider ServiceProvider? @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  checker  User     @relation(fields: [checkerId], references: [id], onDelete: Cascade)
+
+  @@index([listingId])
+  @@index([providerId])
+  @@index([checkerId])
+  @@index([type])
+  @@index([status])
+}
+
+model Favourite {
+  id        String   @id @default(cuid())
+  userId    String
+  listingId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listingId])
+  @@index([userId])
+  @@index([listingId])
+}
+
+model BiasharaRecord {
+  id          String             @id @default(cuid())
+  userId      String
+  type String
+  description String
+  amount      Int
+  category    String?
+  date        DateTime           @default(now())
+  metadata String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@index([date])
+  @@index([category])
+}
+
+model BusinessSettings {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  businessName    String
+  businessType    String?
+  currency        String   @default("KES")
+  taxRate         Float    @default(0)
+  receiptPrefix   String   @default("INV")
+  nextReceiptNum  Int      @default(1)
+  lowStockAlert   Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  message   String
+  data String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  oldData String?
+  newData String?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  type      String   @default("string")
+  public    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

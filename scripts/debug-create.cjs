@@ -1,0 +1,23 @@
+﻿const { chromium } = require("playwright-core");
+(async () => {
+  const browser = await chromium.launch({ channel: "msedge", headless: true });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  page.on("console", (m) => console.log("CONSOLE", m.type(), m.text()));
+  page.on("pageerror", (e) => console.log("PAGEERROR", e.message));
+  await page.goto("http://127.0.0.1:3100/auth/signin", { waitUntil: "networkidle" });
+  await page.fill("#email", "brian@mtaahub.co.ke");
+  await page.fill("#password", "Password123!");
+  await page.click('button[type="submit"]');
+  await page.waitForURL(/dashboard/, { timeout: 30000 });
+  await page.goto("http://127.0.0.1:3100/nyumba/list", { waitUntil: "networkidle" });
+  await page.fill("#title", "E2E sunny one bedroom in Kileleshwa");
+  await page.fill("#rent", "32000");
+  await page.fill("#contactPhone", "0712345999");
+  await page.fill("#description", "Quiet one bedroom with a balcony, borehole water and secure parking. Available immediately.");
+  await page.click('button[type="submit"]');
+  await page.waitForTimeout(4000);
+  console.log("URL:", page.url());
+  const alert = await page.locator('[role="alert"]').count();
+  console.log("ALERTS:", alert, alert ? await page.locator('[role="alert"]').first().innerText() : "");
+  await browser.close();
+})();
