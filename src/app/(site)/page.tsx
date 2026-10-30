@@ -119,9 +119,9 @@ export default async function HomePage() {
           <img
             src="/images/hero-nairobi.jpg"
             alt="Nairobi skyline"
-            className="h-full w-full object-cover object-[50%_62%]"
+            className="h-full w-full object-cover object-[50%_62%] saturate-[1.08] contrast-[1.02]"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-white/85 via-white/35 to-white/0" />
+          <div className="absolute inset-0 bg-gradient-to-r from-white/80 via-white/25 to-white/0" />
           <div className="absolute inset-0 bg-gradient-to-t from-white/40 via-transparent to-transparent" />
         </div>
 
