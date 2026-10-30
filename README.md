@@ -109,4 +109,10 @@ node scripts/e2e.cjs          # signs in, creates a listing, checks every public
 node scripts/screenshot.cjs   # captures shots/{home,admin,nyumba,dashboard,jobs}.png
 ```
 
+## Media
+
+Photography is sourced from Wikimedia Commons (CC BY-SA 4.0 and public domain). Attribution lives in
+[`IMAGE-CREDITS.md`](IMAGE-CREDITS.md) and on the public `/credits` page linked from the footer. Swap the files in
+`public/images/` for your own shots and update both places.
+
 Built for a better Kenya 🇰🇪

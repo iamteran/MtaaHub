@@ -48,40 +48,35 @@ const POPULAR_SERVICES = [
     label: "Houses for Rent",
     blurb: "Explore affordable homes near you",
     icon: Home,
-    art: "from-emerald-100 via-emerald-50 to-white",
-    tint: "text-emerald-700",
+    image: "/images/services/houses.jpg",
   },
   {
     href: "/services?category=Plumber",
     label: "Plumbing Services",
     blurb: "Get trusted plumbers",
     icon: Wrench,
-    art: "from-sky-100 via-sky-50 to-white",
-    tint: "text-sky-700",
+    image: "/images/services/plumbing.jpg",
   },
   {
     href: "/services?category=Repair Technician",
     label: "Phone & Laptop Repair",
     blurb: "Find experts nearby",
     icon: Smartphone,
-    art: "from-violet-100 via-violet-50 to-white",
-    tint: "text-violet-700",
+    image: "/images/services/repair.jpg",
   },
   {
     href: "/services?category=Cleaner",
     label: "Cleaning Services",
     blurb: "Book professional cleaners",
     icon: Sparkles,
-    art: "from-amber-100 via-amber-50 to-white",
-    tint: "text-amber-700",
+    image: "/images/services/cleaning.jpg",
   },
   {
     href: "/services?category=Tailor",
     label: "Tailoring Services",
     blurb: "Find skilled tailors",
     icon: Scissors,
-    art: "from-rose-100 via-rose-50 to-white",
-    tint: "text-rose-700",
+    image: "/images/services/tailoring.jpg",
   },
 ];
 
@@ -297,10 +292,17 @@ export default async function HomePage() {
                 href={service.href}
                 className="group overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-float"
               >
-                <div className={`relative flex h-36 items-center justify-center bg-gradient-to-br ${service.art}`}>
-                  <div className="absolute inset-0 bg-dots opacity-40" />
-                  <span className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-white/85 shadow-sm ring-1 ring-white/60 backdrop-blur-sm">
-                    <Icon className={`h-8 w-8 ${service.tint}`} />
+                <div className="relative h-40 overflow-hidden bg-ink-100">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={service.image}
+                    alt={service.label}
+                    loading="lazy"
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-black/0 to-black/0" />
+                  <span className="absolute left-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg bg-white/90 text-primary-800 shadow-sm backdrop-blur">
+                    <Icon className="h-4 w-4" />
                   </span>
                 </div>
                 <div className="p-4">

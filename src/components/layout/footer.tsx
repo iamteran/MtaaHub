@@ -53,9 +53,14 @@ export function Footer() {
             </div>
           </div>
 
-          <p className="text-sm font-medium text-primary-100/90">
-            Built for a better Kenya <span aria-hidden="true">🇰🇪</span>
-          </p>
+          <div className="text-center md:text-right">
+            <p className="text-sm font-medium text-primary-100/90">
+              Built for a better Kenya <span aria-hidden="true">🇰🇪</span>
+            </p>
+            <Link href="/credits" className="mt-1 inline-block text-[10.5px] text-primary-200/60 transition-colors hover:text-primary-100">
+              Photo credits
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
