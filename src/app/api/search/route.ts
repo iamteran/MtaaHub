@@ -35,6 +35,10 @@ export async function GET(request: NextRequest) {
       if (estate) locationFilter.location.estate = estate;
     }
 
+    const serviceSearch = q
+      ? { OR: [{ name: { contains: q } }, { description: { contains: q } }, { subcategory: { contains: q } }] }
+      : {};
+
     const searchFilter = q
       ? {
           OR: [
@@ -84,7 +88,7 @@ export async function GET(request: NextRequest) {
       const servicesData = await prisma.serviceProvider.findMany({
         where: {
           verificationStatus: "VERIFIED",
-          ...searchFilter,
+          ...serviceSearch,
           ...locationFilter,
         },
         include: {
@@ -103,7 +107,8 @@ export async function GET(request: NextRequest) {
         where: {
           status: "ACTIVE",
           ...(q ? { itemName: { contains: q } } : {}),
-          ...locationFilter,
+          ...(county ? { county } : {}),
+          ...(town ? { town } : {}),
         },
         include: {
           submittedBy: { select: { id: true, displayName: true, image: true } },

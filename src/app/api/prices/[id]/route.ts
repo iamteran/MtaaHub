@@ -3,32 +3,31 @@ import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
+export const dynamic = "force-dynamic";
+
 const priceUpdateSchema = z.object({
-  category: z.enum([
-    "FOOD", "TRANSPORT", "HOUSING", "UTILITIES", "SERVICES", "EDUCATION",
-    "HEALTHCARE", "PERSONAL_CARE", "ELECTRONICS", "CLOTHING",
-    "BUILDING_MATERIALS", "AGRICULTURE", "OTHER"
-  ]).optional(),
+  category: z.string().min(2).max(60).optional(),
   itemName: z.string().min(2).max(200).optional(),
-  brand: z.string().optional().nullable(),
-  unit: z.string().min(1).max(50).optional(),
+  brand: z.string().max(120).optional().nullable(),
+  unit: z.string().min(1).max(60).optional(),
   price: z.number().int().positive().optional(),
-  locationId: z.string().cuid().optional().nullable(),
-  notes: z.string().optional().nullable(),
+  county: z.string().min(2).max(60).optional(),
+  town: z.string().max(120).optional().nullable(),
+  estate: z.string().max(120).optional().nullable(),
+  source: z.string().max(60).optional(),
+  notes: z.string().max(1000).optional().nullable(),
+  isVerified: z.boolean().optional(),
 });
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
+const STAFF = ["SUPER_ADMIN", "MODERATOR", "VERIFICATION_OFFICER", "SUPPORT_STAFF"];
 
-    const price = await prisma.price.findUnique({
-      where: { id },
+export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const price = await prisma.priceSubmission.findUnique({
+      where: { id: params.id },
       include: {
-        user: { select: { id: true, displayName: true, name: true, image: true, createdAt: true } },
-        location: { select: { county: true, town: true, estate: true } },
+        submittedBy: { select: { id: true, displayName: true, name: true, image: true } },
+        verifiedBy: { select: { id: true, displayName: true, name: true } },
       },
     });
 
@@ -43,65 +42,39 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = await params;
-    const body = await request.json();
-    const validated = priceUpdateSchema.parse(body);
-
-    const price = await prisma.price.findUnique({
-      where: { id },
-    });
-
-    if (!price) {
+    const existing = await prisma.priceSubmission.findUnique({ where: { id: params.id } });
+    if (!existing) {
       return NextResponse.json({ error: "Price not found" }, { status: 404 });
     }
 
-    // Check ownership or admin
-    const isOwner = price.userId === session.user.id;
-    const isAdmin = ["SUPER_ADMIN", "MODERATOR", "VERIFICATION_OFFICER"].includes(session.user.role);
-
-    if (!isOwner && !isAdmin) {
+    const isStaff = STAFF.includes(session.user.role ?? "");
+    if (existing.submittedById !== session.user.id && !isStaff) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const oldData = JSON.stringify(price);
+    const validated = priceUpdateSchema.parse(await request.json());
 
-    const updateData: any = { ...validated };
-    if (validated.locationId !== undefined) {
-      updateData.locationId = validated.locationId;
-    }
-
-    const updatedPrice = await prisma.price.update({
-      where: { id },
-      data: updateData,
-      include: {
-        user: { select: { id: true, displayName: true, name: true, image: true } },
-        location: { select: { county: true, town: true, estate: true } },
-      },
-    });
-
-    // Create audit log
-    await prisma.auditLog.create({
+    const price = await prisma.priceSubmission.update({
+      where: { id: params.id },
       data: {
-        userId: session.user.id,
-        action: "UPDATE",
-        entity: "Price",
-        entityId: id,
-        oldData,
-        newData: JSON.stringify(updatedPrice),
+        ...validated,
+        ...(validated.isVerified !== undefined
+          ? { verifiedAt: validated.isVerified ? new Date() : null, verifiedById: validated.isVerified ? session.user.id : null }
+          : {}),
+      },
+      include: {
+        submittedBy: { select: { id: true, displayName: true, name: true, image: true } },
       },
     });
 
-    return NextResponse.json(updatedPrice);
+    return NextResponse.json(price);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Validation error", details: error.flatten().fieldErrors }, { status: 400 });
@@ -111,46 +84,24 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = await params;
-
-    const price = await prisma.price.findUnique({
-      where: { id },
-    });
-
-    if (!price) {
+    const existing = await prisma.priceSubmission.findUnique({ where: { id: params.id } });
+    if (!existing) {
       return NextResponse.json({ error: "Price not found" }, { status: 404 });
     }
 
-    // Check ownership or admin
-    if (price.userId !== session.user.id && !["SUPER_ADMIN", "MODERATOR"].includes(session.user.role)) {
+    const isStaff = STAFF.includes(session.user.role ?? "");
+    if (existing.submittedById !== session.user.id && !isStaff) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    await prisma.price.delete({
-      where: { id },
-    });
-
-    // Create audit log
-    await prisma.auditLog.create({
-      data: {
-        userId: session.user.id,
-        action: "DELETE",
-        entity: "Price",
-        entityId: id,
-        oldData: JSON.stringify(price),
-      },
-    });
-
+    await prisma.priceSubmission.delete({ where: { id: params.id } });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Price DELETE error:", error);

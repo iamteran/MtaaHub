@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "12");
-    const status = searchParams.get("status") || "ACTIVE";
+    const status = searchParams.get("status") || "VERIFIED";
     const category = searchParams.get("category");
     const county = searchParams.get("county");
     const town = searchParams.get("town");

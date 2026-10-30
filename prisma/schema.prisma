@@ -28,7 +28,6 @@ model User {
   jobPosts            JobPost[]
   jobApplications     JobApplication[]
   services            ServiceProvider[]
-  prices              Price[]
   priceSubmissions    PriceSubmission[] @relation("PriceSubmissionSubmittedBy")
   verifiedPriceSubmissions PriceSubmission[] @relation("PriceSubmissionVerifiedBy")
   reports             Report[]
@@ -97,8 +96,6 @@ model Location {
   listings       Listing[]
   jobPosts       JobPost[]
   services       ServiceProvider[]
-  prices         Price[]
-
   @@unique([county, town, estate])
   @@index([county])
   @@index([county, town])
@@ -243,33 +240,6 @@ model ServiceProvider {
   @@index([verificationStatus])
   @@index([locationId])
   @@index([rating])
-}
-
-model Price {
-  id          String        @id @default(cuid())
-  userId      String
-  locationId  String?
-  category String
-  itemName    String
-  unit String
-  price       Int
-  brand       String?
-  quantity    String?
-  shopName    String?
-  shopAddress String?
-  notes       String?
-  submittedAt DateTime      @default(now())
-  verifiedAt  DateTime?
-  verifiedBy  String?
-
-  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  location Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
-
-  @@index([userId])
-  @@index([category])
-  @@index([itemName])
-  @@index([locationId])
-  @@index([submittedAt])
 }
 
 model PriceSubmission {
